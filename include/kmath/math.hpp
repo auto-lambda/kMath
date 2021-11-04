@@ -220,7 +220,10 @@ struct VectorStorage<T, 0> {
 
 constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
   using Scalar = internal::NoCvRef<decltype(scalar)>;
-  return (cur == prev) ? cur : newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
+  if (cur == prev)
+    return cur;
+  else
+    return newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
 }
 
 constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
