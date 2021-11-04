@@ -184,10 +184,7 @@ template <typename T> concept AQuaternion = std::is_same_v<typename internal::No
 namespace internal {
 constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
   using Scalar = internal::NoCvRef<decltype(scalar)>;
-  if (cur == prev)
-    return cur;
-  else
-    return newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
+  return (cur == prev) ? cur : newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
 }
 
 constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
