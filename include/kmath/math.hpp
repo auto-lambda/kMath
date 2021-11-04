@@ -359,16 +359,7 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   constexpr explicit Vector(Scalar const scalar) noexcept { data_.fill(scalar); }
 
   template <typename U>
-  [[deprecated("This function technically invokes undefined behavior (UB), only use this if there is no available alternative!")]]
-  [[nodiscard]] constexpr static decltype(auto) From(U *data) noexcept {
-#if __cpp_lib_bit_cast >= 201806L
-    return *std::bit_cast<Vector<T, Dims> *>(data);
-#else
-    Vector<T, Dims> result;
-    std::memcpy(&result, data, sizeof(result));
-    return result;
-#endif  // __cpp_lib_bit_cast >= 201806L
-  }
+  [[nodiscard]] constexpr static declauto From(U *data) noexcept { return std::launder(reinterpret_cast<::math::Vector<T, Dims> *>(data)); }
 
   [[nodiscard]] constexpr declauto self()       noexcept { return *this; }
   [[nodiscard]] constexpr declauto self() const noexcept { return *this; }
