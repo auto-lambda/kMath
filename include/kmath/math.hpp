@@ -10,9 +10,9 @@
 #define KMATH_MATH_HPP_
 
 #ifdef __cpp_constinit
-#define KMATH_CXX20_CONSTINIT constinit
+# define KMATH_CXX20_CONSTINIT constinit
 #else
-#define KMATH_CXX20_CONSTINIT constexpr
+# define KMATH_CXX20_CONSTINIT constexpr
 #endif  // __cpp_constinit
 
 namespace math::legal {
@@ -33,10 +33,10 @@ SPDX-License-Identifier: BSD-3-Clause)";
 
 #include <array>
 #ifdef __has_include(<bit>)
-#include <bit>
+# include <bit>
 #else
-#include <cstring>
-#endif
+# include <cstring>
+#endif  // __has_include(<bit>)
 #include <cmath>
 #include <concepts>
 #include <cstddef>
@@ -46,23 +46,23 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <utility>
 
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
-#include <iostream>
+# include <iostream>
 #endif  // __has_include(<iostream>) && !defined(KMATH_IOSTREAM)
 
 #if __has_cpp_attribute(no_unique_address)
-#define KMATH_CXX20_NO_UNIQUE_ADDR [[no_unique_address]]
+# define KMATH_CXX20_NO_UNIQUE_ADDR [[no_unique_address]]
 #else
-#define KMATH_CXX20_NO_UNIQUE_ADDR
+# define KMATH_CXX20_NO_UNIQUE_ADDR
 #endif  // __has_cpp_attribute(no_unique_address)
 
 #ifdef __cpp_consteval
-#define KMATH_CXX20_CONSTEVAL consteval
+# define KMATH_CXX20_CONSTEVAL consteval
 #else
-#define KMATH_CXX20_CONSTEVAL constexpr
+# define KMATH_CXX20_CONSTEVAL constexpr
 #endif  // __cpp_consteval
 
 #ifndef declauto
-#define declauto decltype(auto)  // PR number assigned shortly
+# define declauto decltype(auto)  // PR number assigned shortly
 #endif                           // declauto
 
 namespace math {
