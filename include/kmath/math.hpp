@@ -419,7 +419,7 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 
   [[nodiscard]] constexpr bool is_zero() const noexcept {
     if constexpr (std::is_floating_point_v<Scalar>) {
-      return std::abs(dot()) < ::math::kEpsilon<Scalar>;
+      return dot() < ::math::kEpsilon<Scalar>;
     } else /* std::is_integral_v<T> */ {
       return self() == std::declval<Derived>();
     }
