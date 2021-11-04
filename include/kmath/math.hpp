@@ -322,17 +322,17 @@ KMATH_IMPL_ARITHMETIC(*, Dims, std::multiplies)
 
 template <Arithmetic T, SizeType Dims>
 struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
-  using Scalar = internal::NoCvRef<T>;
-  using Derived = Vector<Scalar, Dims>;
-  using SizeType = ::math::SizeType;
-
-  using internal::VectorStorage<Scalar, Dims>::VectorStorage;
-  using Storage = internal::VectorStorage<Scalar, Dims>;
-  using Storage::data_;
-
   constexpr static auto kDims = Dims;
 
   using Tag = internal::VectorTag;
+
+  using Scalar = internal::NoCvRef<T>;
+  using Derived  = ::math::Vector<Scalar, Dims>;
+  using SizeType = ::math::SizeType;
+
+  using           internal::VectorStorage<Scalar, Dims>::VectorStorage;
+  using Storage = internal::VectorStorage<Scalar, Dims>;
+  using Storage::data_;
 
   constexpr explicit Vector(Scalar const scalar) noexcept { data_.fill(scalar); }
 
@@ -348,7 +348,7 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 #endif
   }
 
-  [[nodiscard]] constexpr declauto self() noexcept { return *this; }
+  [[nodiscard]] constexpr declauto self()       noexcept { return *this; }
   [[nodiscard]] constexpr declauto self() const noexcept { return *this; }
 
   [[nodiscard]] constexpr T       &operator[](SizeType const pos)       noexcept { return data_[pos]; }
