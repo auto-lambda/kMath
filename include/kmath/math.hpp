@@ -47,6 +47,8 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <type_traits>
 #include <utility>
 
+#include <bitset>
+
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
 # include <iostream>
 #endif  // __has_include(<iostream>) && !defined(KMATH_IOSTREAM)
@@ -180,7 +182,23 @@ template <typename T> concept AVector     = std::is_same_v<typename internal::No
 template <typename T> concept AMatrix     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::MatrixTag>;
 template <typename T> concept AQuaternion = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::QuaternionTag>;
 
+
 namespace internal {
+constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
+  using Scalar = internal::NoCvRef<decltype(scalar)>;
+  if (cur == prev)
+    return cur;
+  else
+    return newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
+}
+
+constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
+  using Scalar = internal::NoCvRef<decltype(scalar)>;
+  return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
+    ? newton_raphson(scalar, scalar, Scalar{})
+    : static_cast<Scalar>(kQuietNan<Scalar>);
+}
+
 constexpr std::size_t align(const std::size_t size) noexcept {
     if (size == 0) return 1;
     if (size <= sizeof(std::uint32_t)) return alignof(std::uint32_t);
@@ -225,6 +243,14 @@ struct VectorStorage<T, 0> {
 };
 // clang-format on
 }  // namespace internal
+
+constexpr auto ct_sqrt(Arithmetic auto const scalar) noexcept {
+  if (std::is_constant_evaluated()) {
+    return ::math::internal::ct_sqrt(scalar);
+  } else {
+    return std::sqrt(scalar);
+  }
+}
 
 [[nodiscard]] constexpr auto dot(AVector auto &&lhs,
                                  AVector auto &&rhs) noexcept {
@@ -380,20 +406,20 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr auto truncate() const noexcept { return truncate<U>(std::make_index_sequence<Dims>{}); }
 
   [[nodiscard]] constexpr Scalar length_squared() const noexcept { return dot(); }
-  [[nodiscard]] Scalar length() const noexcept { return std::sqrt(length_squared()); }
-  [[nodiscard]] Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
+  [[nodiscard]] constexpr Scalar length() const noexcept { return ::math::ct_sqrt(length_squared()); }
+  [[nodiscard]] constexpr Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
 
-  [[nodiscard]] Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
+  [[nodiscard]] constexpr Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
 
-  [[nodiscard]] auto resized(Scalar const scale) const { return self() * (reciprocal_length() * scale); }
+  [[nodiscard]] constexpr auto resized(Scalar const scale) const { return self() * (reciprocal_length() * scale); }
 
-  void normalize() const noexcept { self() *= reciprocal_length(); }
-  [[nodiscard]] auto normalized() const noexcept { return resized(1); }
+                constexpr void normalize()  const noexcept { self() *= reciprocal_length(); }
+  [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
-  [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return dot(self(), other); }
+  [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return ::math::dot(self(), other); }
   [[nodiscard]] constexpr Scalar dot() const noexcept { return dot(self()); }
 
-  [[nodiscard]] bool is_zero() const noexcept {
+  [[nodiscard]] constexpr bool is_zero() const noexcept {
     if constexpr (std::is_floating_point_v<Scalar>) {
       return std::abs(dot()) < ::math::kEpsilon<Scalar>;
     } else /* std::is_integral_v<T> */ {
