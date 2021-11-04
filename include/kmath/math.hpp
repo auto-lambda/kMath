@@ -32,13 +32,6 @@ SPDX-License-Identifier: BSD-3-Clause)";
 }  // namespace math::legal
 
 #include <array>
-
-#if __cpp_lib_bit_cast >= 201806L
-# include <bit>
-#else
-# include <cstring>
-#endif  // __cpp_lib_bit_cast >= 201806L
-
 #include <cmath>
 #include <concepts>
 #include <cstddef>
