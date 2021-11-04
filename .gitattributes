@@ -1,0 +1,5 @@
+*.html linguist-detectable=false
+*.htm inguist-detectable=false
+*.css inguist-detectable=false
+assets/* linguist-vendored
+documentation/* linguist-documentation
