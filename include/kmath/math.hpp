@@ -32,11 +32,13 @@ SPDX-License-Identifier: BSD-3-Clause)";
 }  // namespace math::legal
 
 #include <array>
-#ifdef __has_include(<bit>)
+
+#if __cpp_lib_bit_cast >= 201806L
 # include <bit>
 #else
 # include <cstring>
-#endif  // __has_include(<bit>)
+#endif  // __cpp_lib_bit_cast >= 201806L
+
 #include <cmath>
 #include <concepts>
 #include <cstddef>
@@ -323,42 +325,41 @@ KMATH_IMPL_ARITHMETIC(*, Dims, std::multiplies)
 template <Arithmetic T, SizeType Dims>
 struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   constexpr static auto kDims = Dims;
-
-  using Tag = internal::VectorTag;
-
   using Scalar = internal::NoCvRef<T>;
   using Derived  = ::math::Vector<Scalar, Dims>;
   using SizeType = ::math::SizeType;
 
-  using           internal::VectorStorage<Scalar, Dims>::VectorStorage;
+  using internal::VectorStorage<Scalar, Dims>::VectorStorage;
   using Storage = internal::VectorStorage<Scalar, Dims>;
   using Storage::data_;
+
+  using Tag = internal::VectorTag;
 
   constexpr explicit Vector(Scalar const scalar) noexcept { data_.fill(scalar); }
 
   template <typename U>
   [[deprecated("This function technically invokes undefined behavior (UB), only use this if there is no available alternative!")]]
   [[nodiscard]] constexpr static decltype(auto) From(U *data) noexcept {
-#ifndef __cpp_lib_bit_cast
+#if __cpp_lib_bit_cast >= 201806L
+    return *std::bit_cast<Vector<T, Dims> *>(data);
+#else
     Vector<T, Dims> result;
     std::memcpy(&result, data, sizeof(result));
     return result;
-#else
-    return *std::bit_cast<Vector<T, Dims> *>(data);
-#endif
+#endif  // __cpp_lib_bit_cast >= 201806L
   }
 
   [[nodiscard]] constexpr declauto self()       noexcept { return *this; }
   [[nodiscard]] constexpr declauto self() const noexcept { return *this; }
 
-  [[nodiscard]] constexpr T       &operator[](SizeType const pos)       noexcept { return data_[pos]; }
-  [[nodiscard]] constexpr T const &operator[](SizeType const pos) const noexcept { return data_[pos]; }
+  [[nodiscard]] constexpr declauto operator[](SizeType const pos)       noexcept { return data_[pos]; }
+  [[nodiscard]] constexpr Scalar   operator[](SizeType const pos) const noexcept { return data_[pos]; }
 
-  [[nodiscard]] explicit constexpr operator T *()             noexcept { return std::data(data_); }
-  [[nodiscard]] explicit constexpr operator T const *() const noexcept { return std::data(data_); }
+  [[nodiscard]] explicit constexpr operator Scalar *()             noexcept { return std::data(data_); }
+  [[nodiscard]] explicit constexpr operator Scalar *() const noexcept { return std::data(data_); }
 
-  [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<T>(-1); }
-  [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<T>(-1); }
+  [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
+  [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
 
   [[nodiscard]] constexpr declauto data()       noexcept { return std::data(data_); }
   [[nodiscard]] constexpr declauto data() const noexcept { return std::data(data_); }
@@ -378,23 +379,23 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   template <Arithmetic U>
   [[nodiscard]] constexpr auto truncate() const noexcept { return truncate<U>(std::make_index_sequence<Dims>{}); }
 
-  [[nodiscard]] constexpr T length_squared() const noexcept { return dot(); }
-  [[nodiscard]] T length() const noexcept { return std::sqrt(length_squared()); }
-  [[nodiscard]] T reciprocal_length() const noexcept { return static_cast<T>(1) / length(); }
+  [[nodiscard]] constexpr Scalar length_squared() const noexcept { return dot(); }
+  [[nodiscard]] Scalar length() const noexcept { return std::sqrt(length_squared()); }
+  [[nodiscard]] Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
 
-  [[nodiscard]] T distance(Derived const &other) const noexcept { return (self() - other).length(); }
+  [[nodiscard]] Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
 
-  [[nodiscard]] constexpr auto resized(T const scale) const { return self() * (reciprocal_length() * scale); }
+  [[nodiscard]] auto resized(Scalar const scale) const { return self() * (reciprocal_length() * scale); }
 
   void normalize() const noexcept { self() *= reciprocal_length(); }
   [[nodiscard]] auto normalized() const noexcept { return resized(1); }
   
-  [[nodiscard]] constexpr T dot(Vector const &other) const noexcept { return dot(self(), other); }
-  [[nodiscard]] constexpr T dot() const noexcept { return dot(self()); }
+  [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return dot(self(), other); }
+  [[nodiscard]] constexpr Scalar dot() const noexcept { return dot(self()); }
 
   [[nodiscard]] bool is_zero() const noexcept {
-    if constexpr (std::is_floating_point_v<T>) {
-      return std::abs(dot()) < ::math::kEpsilon<T>;
+    if constexpr (std::is_floating_point_v<Scalar>) {
+      return std::abs(dot()) < ::math::kEpsilon<Scalar>;
     } else /* std::is_integral_v<T> */ {
       return self() == std::declval<Derived>();
     }
