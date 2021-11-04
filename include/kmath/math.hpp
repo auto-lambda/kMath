@@ -32,7 +32,7 @@ SPDX-License-Identifier: BSD-3-Clause)";
 }  // namespace math::legal
 
 #include <array>
-#ifdef __cpp_lib_bit_cast
+#ifdef __has_include(<bit>)
 #include <bit>
 #else
 #include <cstring>
@@ -166,12 +166,12 @@ static_assert(!std::is_constructible_v<Tag>      && !std::is_assignable_v<Tag, T
            && !std::is_copy_constructible_v<Tag> && !std::is_copy_assignable_v<Tag>
            && !std::is_move_constructible_v<Tag> && !std::is_move_assignable_v<Tag>);
 
-struct VectorTag     : Tag{};
-struct MatrixTag     : Tag{};
+struct VectorTag : Tag{};
+struct MatrixTag : Tag{};
 struct QuaternionTag : Tag{};
 
-template <typename T> using NoCv    = std::remove_cv_t<T>;
 template <typename T> using NoCvRef = std::remove_cvref_t<T>;
+template <typename T> using NoCv = std::remove_cv_t<T>;
 }  // namespace internal
 
 template <typename T> concept AVector     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::VectorTag>;
@@ -301,7 +301,7 @@ constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
 
 #define KMATH_IMPL_ARITHMETIC_IMPL(ShouldCopy, Token, Dims, Op)                                                \
   template <typename U, typename V>                                                                            \
-    requires ::math::AVector<U> || ::math::AVector<V>                                                          \
+    requires(::math::AVector<U> || ::math::AVector<V>)                                                         \
   constexpr declauto operator Token(U &&u, V &&v) noexcept {                                                   \
     return ::math::internal::implement_arithmetic<ShouldCopy>(std::forward<U>(u), std::forward<V>(v), Op<>{}); \
   }
