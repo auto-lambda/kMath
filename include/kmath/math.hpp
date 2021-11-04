@@ -39,7 +39,6 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <functional>
 #include <type_traits>
 #include <utility>
-#include <iomanip>
 
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
 # include <iostream>
