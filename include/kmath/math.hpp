@@ -39,6 +39,7 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <functional>
 #include <type_traits>
 #include <utility>
+#include <iomanip>
 
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
 # include <iostream>
@@ -218,24 +219,23 @@ struct VectorStorage<T, 0> {
   KMATH_CXX20_NO_UNIQUE_ADDR struct Empty {} data_{};
 };
 
-constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
-  using Scalar = internal::NoCvRef<decltype(scalar)>;
+constexpr auto newton_raphson(long double scalar, long double cur, long double prev) noexcept {
   if (cur == prev)
     return cur;
   else
-    return newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
+    return newton_raphson(scalar, static_cast<long double>(.5) * (cur + scalar / cur), cur);
 }
 
 constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   using Scalar = internal::NoCvRef<decltype(scalar)>;
   return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
-    ? newton_raphson(scalar, scalar, Scalar{})
+    ? static_cast<Scalar>(newton_raphson(scalar, scalar, Scalar{}))
     : kQuietNan<Scalar>;
 }
 // clang-format on
 }  // namespace internal
 
-constexpr auto ct_sqrt(Arithmetic auto const scalar) noexcept {
+constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   return std::is_constant_evaluated() ? ::math::internal::ct_sqrt(scalar) : std::sqrt(scalar);
 }
 
