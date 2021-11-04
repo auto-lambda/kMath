@@ -47,8 +47,6 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <type_traits>
 #include <utility>
 
-#include <bitset>
-
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
 # include <iostream>
 #endif  // __has_include(<iostream>) && !defined(KMATH_IOSTREAM)
@@ -196,7 +194,7 @@ constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   using Scalar = internal::NoCvRef<decltype(scalar)>;
   return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
     ? newton_raphson(scalar, scalar, Scalar{})
-    : static_cast<Scalar>(kQuietNan<Scalar>);
+    : kQuietNan<Scalar>;
 }
 
 constexpr std::size_t align(const std::size_t size) noexcept {
