@@ -63,7 +63,7 @@ SPDX-License-Identifier: BSD-3-Clause)";
 
 #ifndef declauto
 # define declauto decltype(auto)  // PR number assigned shortly
-#endif                           // declauto
+#endif                            // declauto
 
 namespace math {
 template <typename T>
