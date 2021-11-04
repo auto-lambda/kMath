@@ -175,18 +175,6 @@ template <typename T> concept AQuaternion = std::is_same_v<typename internal::No
 
 
 namespace internal {
-constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
-  using Scalar = internal::NoCvRef<decltype(scalar)>;
-  return (cur == prev) ? cur : newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
-}
-
-constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
-  using Scalar = internal::NoCvRef<decltype(scalar)>;
-  return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
-    ? newton_raphson(scalar, scalar, Scalar{})
-    : kQuietNan<Scalar>;
-}
-
 constexpr std::size_t align(std::size_t const size) noexcept {
     if (size == 0) return 1;
     if (size <= sizeof(std::uint32_t)) return alignof(std::uint32_t);
@@ -229,15 +217,23 @@ template <Arithmetic T>
 struct VectorStorage<T, 0> {
   KMATH_CXX20_NO_UNIQUE_ADDR struct Empty {} data_{};
 };
+
+constexpr auto newton_raphson(Arithmetic auto scalar, Arithmetic auto cur, Arithmetic auto prev) noexcept {
+  using Scalar = internal::NoCvRef<decltype(scalar)>;
+  return (cur == prev) ? cur : newton_raphson(scalar, static_cast<Scalar>(.5) * (cur + scalar / cur), cur);
+}
+
+constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
+  using Scalar = internal::NoCvRef<decltype(scalar)>;
+  return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
+    ? newton_raphson(scalar, scalar, Scalar{})
+    : kQuietNan<Scalar>;
+}
 // clang-format on
 }  // namespace internal
 
 constexpr auto ct_sqrt(Arithmetic auto const scalar) noexcept {
-  if (std::is_constant_evaluated()) {
-    return ::math::internal::ct_sqrt(scalar);
-  } else {
-    return std::sqrt(scalar);
-  }
+  return std::is_constant_evaluated() ? ::math::internal::ct_sqrt(scalar) : std::sqrt(scalar);
 }
 
 [[nodiscard]] constexpr auto dot(AVector auto &&lhs,
