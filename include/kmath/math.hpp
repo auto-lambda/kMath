@@ -194,7 +194,7 @@ constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
     : kQuietNan<Scalar>;
 }
 
-constexpr std::size_t align(const std::size_t size) noexcept {
+constexpr std::size_t align(std::size_t const size) noexcept {
     if (size == 0) return 1;
     if (size <= sizeof(std::uint32_t)) return alignof(std::uint32_t);
     if (size <= sizeof(std::uint64_t)) return alignof(std::uint64_t);
@@ -400,19 +400,19 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   template <Arithmetic U>
   [[nodiscard]] constexpr auto truncate() const noexcept { return truncate<U>(std::make_index_sequence<Dims>{}); }
 
-  [[nodiscard]] constexpr Scalar length_squared() const noexcept { return dot(); }
-  [[nodiscard]] constexpr Scalar length() const noexcept { return ::math::ct_sqrt(length_squared()); }
+  [[nodiscard]] constexpr Scalar length_squared()    const noexcept { return dot(); }
+  [[nodiscard]] constexpr Scalar length()            const noexcept { return ::math::ct_sqrt(length_squared()); }
   [[nodiscard]] constexpr Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
 
   [[nodiscard]] constexpr Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
 
   [[nodiscard]] constexpr auto resized(Scalar const scale) const { return self() * (reciprocal_length() * scale); }
 
-                constexpr void normalize()  const noexcept { self() *= reciprocal_length(); }
+                constexpr void normalize () const noexcept { self() *= reciprocal_length(); }
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
   [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return ::math::dot(self(), other); }
-  [[nodiscard]] constexpr Scalar dot() const noexcept { return dot(self()); }
+  [[nodiscard]] constexpr Scalar dot()                    const noexcept { return dot(self()); }
 
   [[nodiscard]] constexpr bool is_zero() const noexcept {
     if constexpr (std::is_floating_point_v<Scalar>) {
