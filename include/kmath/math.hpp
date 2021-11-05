@@ -477,12 +477,12 @@ using namespace aliases;
 #endif  // KMATH_NO_ALIASES
 
 template <std::floating_point T>
-[[nodiscard]] constexpr inline T const rad_to_deg(T const rad) {
+[[nodiscard]] constexpr inline T const rad_to_deg(T const rad) noexcept {
   return rad * static_cast<T>(180) / kPi<T>;
 }
 
 template <std::floating_point T>
-[[nodiscard]] constexpr inline T const deg_to_rad(T const deg) {
+[[nodiscard]] constexpr inline T const deg_to_rad(T const deg) noexcept {
   return deg * kPi<T> / static_cast<T>(180);
 }
 
