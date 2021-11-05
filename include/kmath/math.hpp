@@ -478,12 +478,12 @@ using namespace aliases;
 
 template <std::floating_point T>
 [[nodiscard]] constexpr inline T const rad_to_deg(T const rad) noexcept {
-  return rad * static_cast<T>(180) / kPi<T>;
+  return static_cast<T>(rad * 180.0L / kPi<long double>);
 }
 
 template <std::floating_point T>
 [[nodiscard]] constexpr inline T const deg_to_rad(T const deg) noexcept {
-  return deg * kPi<T> / static_cast<T>(180);
+  return static_cast<T>(deg * kPi<long double> / 180.0L);
 }
 
 namespace tests {
