@@ -361,6 +361,9 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] explicit constexpr operator Scalar *()       noexcept { return std::data(data_); }
   [[nodiscard]] explicit constexpr operator Scalar *() const noexcept { return std::data(data_); }
 
+  [[nodiscard]] explicit constexpr operator std::array<Scalar, Dims>()       noexcept { return data_; }
+  [[nodiscard]] explicit constexpr operator std::array<Scalar, Dims>() const noexcept { return data_; }
+
   [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
   [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
 
