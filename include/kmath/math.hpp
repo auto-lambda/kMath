@@ -175,7 +175,7 @@ template <typename T> concept AQuaternion = std::is_same_v<typename internal::No
 
 
 namespace internal {
-constexpr std::size_t align(std::size_t const size) noexcept {
+[[nodiscard]] constexpr std::size_t align(std::size_t const size) noexcept {
     if (size == 0) return 1;
     if (size <= sizeof(std::uint32_t)) return alignof(std::uint32_t);
     if (size <= sizeof(std::uint64_t)) return alignof(std::uint64_t);
@@ -218,14 +218,14 @@ struct VectorStorage<T, 0> {
   KMATH_CXX20_NO_UNIQUE_ADDR struct Empty {} data_{};
 };
 
-constexpr auto newton_raphson(long double scalar, long double cur, long double prev) noexcept {
+[[nodiscard]] constexpr auto newton_raphson(long double scalar, long double cur, long double prev) noexcept {
   if (cur == prev)
     return cur;
   else
     return newton_raphson(scalar, static_cast<long double>(.5) * (cur + scalar / cur), cur);
 }
 
-constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
+[[nodiscard]] constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   using Scalar = internal::NoCvRef<decltype(scalar)>;
   return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
     ? static_cast<Scalar>(newton_raphson(scalar, scalar, Scalar{}))
@@ -234,7 +234,7 @@ constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
 // clang-format on
 }  // namespace internal
 
-constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
+[[nodiscard]] constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   return std::is_constant_evaluated() ? ::math::internal::ct_sqrt(scalar) : std::sqrt(scalar);
 }
 
@@ -263,7 +263,7 @@ constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
 namespace internal {
 // clang-format off
 template <bool ShouldCopy>
-constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
+[[nodiscard]] constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
                                         auto &&op) noexcept {
   using Lhs = NoCvRef<decltype(lhs)>;
   using Rhs = NoCvRef<decltype(rhs)>;
@@ -477,12 +477,12 @@ using namespace aliases;
 #endif  // KMATH_NO_ALIASES
 
 template <std::floating_point T>
-constexpr inline T const rad_to_deg(T const rad) {
+[[nodiscard]] constexpr inline T const rad_to_deg(T const rad) {
   return rad * static_cast<T>(180) / kPi<T>;
 }
 
 template <std::floating_point T>
-constexpr inline T const deg_to_rad(T const deg) {
+[[nodiscard]] constexpr inline T const deg_to_rad(T const deg) {
   return deg * kPi<T> / static_cast<T>(180);
 }
 
