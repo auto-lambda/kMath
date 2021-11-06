@@ -263,7 +263,7 @@ struct VectorStorage<T, 0> {
 namespace internal {
 // clang-format off
 template <bool ShouldCopy>
-[[nodiscard]] constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
+constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
                                         auto &&op) noexcept {
   using Lhs = NoCvRef<decltype(lhs)>;
   using Rhs = NoCvRef<decltype(rhs)>;
