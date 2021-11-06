@@ -167,12 +167,14 @@ struct QuaternionTag : Tag{};
 
 template <typename T> using NoCvRef = std::remove_cvref_t<T>;
 template <typename T> using NoCv    = std::remove_cv_t<T>;
+
+template <bool ShouldCopy, typename T>
+concept CopyOrNonConstLValue = ShouldCopy || !(std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>);
 }  // namespace internal
 
 template <typename T> concept AVector     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::VectorTag>;
 template <typename T> concept AMatrix     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::MatrixTag>;
 template <typename T> concept AQuaternion = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::QuaternionTag>;
-
 
 namespace internal {
 [[nodiscard]] constexpr std::size_t align(std::size_t const size) noexcept {
@@ -263,8 +265,7 @@ struct VectorStorage<T, 0> {
 namespace internal {
 // clang-format off
 template <bool ShouldCopy>
-[[nodiscard]] constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs,
-                                        auto &&op) noexcept {
+constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs, auto &&op) noexcept {
   using Lhs = NoCvRef<decltype(lhs)>;
   using Rhs = NoCvRef<decltype(rhs)>;
 
@@ -313,11 +314,11 @@ template <bool ShouldCopy>
 }
 }  // namespace internal
 
-#define KMATH_IMPL_ARITHMETIC_IMPL(ShouldCopy, Token, Dims, Op)                                                \
-  template <typename U, typename V>                                                                            \
-    requires ::math::AVector<U> || ::math::AVector<V>                                                          \
-  constexpr declauto operator Token(U &&u, V &&v) noexcept {                                                   \
-    return ::math::internal::implement_arithmetic<ShouldCopy>(std::forward<U>(u), std::forward<V>(v), Op<>{}); \
+#define KMATH_IMPL_ARITHMETIC_IMPL(ShouldCopy, Token, Dims, Op)                                                  \
+  template <typename U, typename V>                                                                              \
+    requires (::math::AVector<U> || ::math::AVector<V>) && ::math::internal::CopyOrNonConstLValue<ShouldCopy, U> \
+  constexpr declauto operator Token(U &&u, V &&v) noexcept {                                                     \
+    return ::math::internal::implement_arithmetic<ShouldCopy>(std::forward<U>(u), std::forward<V>(v), Op<>{});   \
   }
 
 // clang-format on
@@ -361,14 +362,14 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] explicit constexpr operator Scalar *()       noexcept { return std::data(data_); }
   [[nodiscard]] explicit constexpr operator Scalar *() const noexcept { return std::data(data_); }
 
-  [[nodiscard]] explicit constexpr operator std::array<Scalar, Dims>()       noexcept { return data_; }
-  [[nodiscard]] explicit constexpr operator std::array<Scalar, Dims>() const noexcept { return data_; }
-
   [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
   [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
 
   [[nodiscard]] constexpr declauto data()       noexcept { return std::data(data_); }
   [[nodiscard]] constexpr declauto data() const noexcept { return std::data(data_); }
+
+  [[nodiscard]] constexpr auto       &raw()       noexcept { return data_; }
+  [[nodiscard]] constexpr auto const &raw() const noexcept { return data_; }
 
   [[nodiscard]] constexpr auto size() const noexcept { return kDims; }
   [[nodiscard]] constexpr auto dims() const noexcept { return kDims; }
@@ -391,13 +392,14 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 
   [[nodiscard]] constexpr Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
 
-  [[nodiscard]] constexpr auto resized(Scalar const scale) const { return self() * (reciprocal_length() * scale); }
+                constexpr void resize (Scalar const scale)       noexcept { return self() *= (reciprocal_length() * scale); }
+  [[nodiscard]] constexpr auto resized(Scalar const scale) const noexcept { return self() *  (reciprocal_length() * scale); }
 
-                constexpr void normalize () const noexcept { self() *= reciprocal_length(); }
+                constexpr void normalize ()       noexcept { self() *= reciprocal_length(); }
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
-  [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return ::math::dot(self(), other); }
   [[nodiscard]] constexpr Scalar dot()                    const noexcept { return dot(self()); }
+  [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return ::math::dot(self(), other); }
 
   [[nodiscard]] constexpr bool is_zero() const noexcept {
     if constexpr (std::is_floating_point_v<Scalar>) {
