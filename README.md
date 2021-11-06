@@ -47,6 +47,9 @@ int main(int const argc, char const *[]) {
 
   if (vector_3d[0] != static_cast<ScalarType>(2.25)) // This gets optimized out!
     puts("test failed");
+    
+  // you can static_cast to std::array<ScalarType, 3> and unpack with structured bindings
+  [[maybe_unused]] auto [x,y,z] = static_cast<std::array<ScalarType, 3>>(vector_3d);
 }
 ```
 Compiling `main.cpp` with `clang 13` and `-std=c++2b -O3 -Wall -Wpedantic -Wconversion -Werror -mavx2` produces the following output:
@@ -74,7 +77,7 @@ main:                                              # @main
 .L.str:
   .asciz  "%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n"
 ```
-***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/czeKWr15b)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
+***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/Y1jcM6zxd)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
 
 ## Progress
 - [x] mathematical constants
