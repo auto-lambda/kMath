@@ -392,10 +392,10 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 
   [[nodiscard]] constexpr Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
 
-                constexpr void resize (Scalar const scale)       noexcept { return self() *= (reciprocal_length() * scale); }
+                constexpr void resize (Scalar const scale)       noexcept {        self() *= (reciprocal_length() * scale); }
   [[nodiscard]] constexpr auto resized(Scalar const scale) const noexcept { return self() *  (reciprocal_length() * scale); }
 
-                constexpr void normalize ()       noexcept { self() *= reciprocal_length(); }
+                constexpr void normalize ()       noexcept {        resize (1); }
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
   [[nodiscard]] constexpr Scalar dot()                    const noexcept { return dot(self()); }
