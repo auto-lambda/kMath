@@ -508,11 +508,11 @@ struct CheckAlignment {
   KMATH_CHECK_ALIGNMENT_ONE(Type, Name, 3) \
   KMATH_CHECK_ALIGNMENT_ONE(Type, Name, 4)
 
-KMATH_CHECK_ALIGNMENT(unsigned int      , uint)
-KMATH_CHECK_ALIGNMENT(unsigned long long, ull )
-KMATH_CHECK_ALIGNMENT(float             , flt )
-KMATH_CHECK_ALIGNMENT(     double       , dbl )
-KMATH_CHECK_ALIGNMENT(long double       , ldbl)
+KMATH_CHECK_ALIGNMENT(unsigned         int, uint)
+KMATH_CHECK_ALIGNMENT(unsigned long   long,  ull)
+KMATH_CHECK_ALIGNMENT(               float,  flt)
+KMATH_CHECK_ALIGNMENT(              double,  dbl)
+KMATH_CHECK_ALIGNMENT(         long double, ldbl)
 
 #undef KMATH_CHECK_ALIGNMENT
 #undef KMATH_CHECK_ALIGNMENT_ONE
