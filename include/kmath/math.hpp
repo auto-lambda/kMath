@@ -57,8 +57,8 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #endif  // __cpp_consteval
 
 #ifndef declauto
-# define declauto decltype(auto)  // PR number assigned shortly
-#endif                            // declauto
+# define declauto decltype(auto)
+#endif  // declauto
 
 namespace math {
 template <typename T>
@@ -409,18 +409,16 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
     }
   }
 
- private:
-  // TODO: Finish implementing this
-  [[nodiscard]] constexpr declauto x()    noexcept requires(kDims >= 1) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto y()    noexcept requires(kDims >= 2) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto z()    noexcept requires(kDims >= 3) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto w()    noexcept requires(kDims >= 4) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto xy()   noexcept requires(kDims >= 2) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto yz()   noexcept requires(kDims >= 3) { return Vector{&Storage::data_[1]}; }
-  [[nodiscard]] constexpr declauto zw()   noexcept requires(kDims >= 4) { return Vector{&Storage::data_[2]}; }
-  [[nodiscard]] constexpr declauto xyz()  noexcept requires(kDims >= 3) { return Vector{&Storage::data_[0]}; }
-  [[nodiscard]] constexpr declauto yzw()  noexcept requires(kDims >= 4) { return Vector{&Storage::data_[1]}; }
-  [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return Vector{&Storage::data_[0]}; }
+  [[nodiscard]] constexpr declauto x()    noexcept requires(kDims >= 1) { return self()[0]; }
+  [[nodiscard]] constexpr declauto y()    noexcept requires(kDims >= 2) { return self()[1]; }
+  [[nodiscard]] constexpr declauto z()    noexcept requires(kDims >= 3) { return self()[2]; }
+  [[nodiscard]] constexpr declauto w()    noexcept requires(kDims >= 4) { return self()[3]; }
+  [[nodiscard]] constexpr declauto xy()   noexcept requires(kDims >= 2) { return Vector<Scalar, 2>::From(data() + 0); }
+  [[nodiscard]] constexpr declauto yz()   noexcept requires(kDims >= 3) { return Vector<Scalar, 2>::From(data() + 1); }
+  [[nodiscard]] constexpr declauto zw()   noexcept requires(kDims >= 4) { return Vector<Scalar, 2>::From(data() + 2); }
+  [[nodiscard]] constexpr declauto xyz()  noexcept requires(kDims >= 3) { return Vector<Scalar, 3>::From(data() + 0); }
+  [[nodiscard]] constexpr declauto yzw()  noexcept requires(kDims >= 4) { return Vector<Scalar, 3>::From(data() + 1); }
+  [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return Vector<Scalar, 4>::From(data() + 0); }
 
   [[nodiscard]] constexpr Vector cross(Vector<T, 3> const &other) const noexcept requires(kDims == 3) { return math::cross(self(), other); }
 
@@ -510,11 +508,11 @@ struct CheckAlignment {
   KMATH_CHECK_ALIGNMENT_ONE(Type, Name, 3) \
   KMATH_CHECK_ALIGNMENT_ONE(Type, Name, 4)
 
-KMATH_CHECK_ALIGNMENT(unsigned int, uint)
-KMATH_CHECK_ALIGNMENT(unsigned long long, ull)
-KMATH_CHECK_ALIGNMENT(float, flt)
-KMATH_CHECK_ALIGNMENT(double, dbl)
-KMATH_CHECK_ALIGNMENT(long double, ldbl)
+KMATH_CHECK_ALIGNMENT(unsigned int      , uint)
+KMATH_CHECK_ALIGNMENT(unsigned long long, ull )
+KMATH_CHECK_ALIGNMENT(float             , flt )
+KMATH_CHECK_ALIGNMENT(     double       , dbl )
+KMATH_CHECK_ALIGNMENT(long double       , ldbl)
 
 #undef KMATH_CHECK_ALIGNMENT
 #undef KMATH_CHECK_ALIGNMENT_ONE
