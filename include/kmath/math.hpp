@@ -409,16 +409,16 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
     }
   }
 
-  [[nodiscard]] constexpr declauto x()    noexcept requires(kDims >= 1) { return self()[0]; }
-  [[nodiscard]] constexpr declauto y()    noexcept requires(kDims >= 2) { return self()[1]; }
-  [[nodiscard]] constexpr declauto z()    noexcept requires(kDims >= 3) { return self()[2]; }
-  [[nodiscard]] constexpr declauto w()    noexcept requires(kDims >= 4) { return self()[3]; }
-  [[nodiscard]] constexpr declauto xy()   noexcept requires(kDims >= 2) { return Vector<Scalar, 2>::From(data() + 0); }
-  [[nodiscard]] constexpr declauto yz()   noexcept requires(kDims >= 3) { return Vector<Scalar, 2>::From(data() + 1); }
-  [[nodiscard]] constexpr declauto zw()   noexcept requires(kDims >= 4) { return Vector<Scalar, 2>::From(data() + 2); }
-  [[nodiscard]] constexpr declauto xyz()  noexcept requires(kDims >= 3) { return Vector<Scalar, 3>::From(data() + 0); }
-  [[nodiscard]] constexpr declauto yzw()  noexcept requires(kDims >= 4) { return Vector<Scalar, 3>::From(data() + 1); }
-  [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return Vector<Scalar, 4>::From(data() + 0); }
+  [[nodiscard]] constexpr declauto    x() noexcept requires(kDims >= 1) { return self()[0]; }
+  [[nodiscard]] constexpr declauto    y() noexcept requires(kDims >= 2) { return self()[1]; }
+  [[nodiscard]] constexpr declauto    z() noexcept requires(kDims >= 3) { return self()[2]; }
+  [[nodiscard]] constexpr declauto    w() noexcept requires(kDims >= 4) { return self()[3]; }
+  [[nodiscard]] constexpr declauto   xy() noexcept requires(kDims >= 2) { return *Vector<Scalar, 2>::From(data() + 0); }
+  [[nodiscard]] constexpr declauto   yz() noexcept requires(kDims >= 3) { return *Vector<Scalar, 2>::From(data() + 1); }
+  [[nodiscard]] constexpr declauto   zw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 2>::From(data() + 2); }
+  [[nodiscard]] constexpr declauto  xyz() noexcept requires(kDims >= 3) { return *Vector<Scalar, 3>::From(data() + 0); }
+  [[nodiscard]] constexpr declauto  yzw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 3>::From(data() + 1); }
+  [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 4>::From(data() + 0); }
 
   [[nodiscard]] constexpr Vector cross(Vector<T, 3> const &other) const noexcept requires(kDims == 3) { return math::cross(self(), other); }
 
