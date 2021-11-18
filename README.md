@@ -24,7 +24,7 @@ You can find our documentation [here](http://typena.me/docs/structmath_1_1_vecto
 #include <https://raw.githubusercontent.com/auto-lambda/kMath/master/include/kmath/math.hpp>
 #include <cstdio>
 
-int main(int const argc, char const *[]) {
+int main(int const argc, char const * const[]) {
   math::Vector const vector_2d {1.5, 1.5};      // (1.5, 1.5)
   math::Vector       vector_3d {1.5, 1.5, 1.5}; // (1.5, 1.5, 1.5)
 
@@ -85,7 +85,7 @@ main:                                              # @main
 .L.str:
   .asciz  "%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n"
 ```
-***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/51qvezaTe)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
+***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/fEEoP3Tqv)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
 
 ## Progress
 - [x] mathematical constants
