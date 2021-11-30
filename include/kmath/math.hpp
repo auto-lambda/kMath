@@ -237,7 +237,9 @@ struct VectorStorage<T, 0> {
 }  // namespace internal
 
 [[nodiscard]] constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
-  return std::is_constant_evaluated() ? ::math::internal::ct_sqrt(scalar) : std::sqrt(scalar);
+  return std::is_constant_evaluated()
+    ? ::math::internal::ct_sqrt(scalar)
+    : static_cast<internal::NoCvRef<decltype(scalar)>>(std::sqrt(scalar));
 }
 
 [[nodiscard]] constexpr auto dot(AVector auto &&lhs,
