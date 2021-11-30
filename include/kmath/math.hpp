@@ -177,11 +177,18 @@ template <typename T> concept AMatrix     = std::is_same_v<typename internal::No
 template <typename T> concept AQuaternion = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::QuaternionTag>;
 
 namespace internal {
-[[nodiscard]] constexpr std::size_t align(std::size_t const size) noexcept {
+[[nodiscard]] consteval std::size_t align(std::size_t const size) noexcept {
+    constexpr auto kXmmAlignment = sizeof(std::uint64_t) * 2;
+    constexpr auto kYmmAlignment = sizeof(std::uint64_t) * 4;
+    constexpr auto kZmmAlignment = sizeof(std::uint64_t) * 8;
+
     if (size == 0) return 1;
     if (size <= sizeof(std::uint32_t)) return alignof(std::uint32_t);
     if (size <= sizeof(std::uint64_t)) return alignof(std::uint64_t);
-    return alignof(std::max_align_t);
+    if (size <= kXmmAlignment) return kXmmAlignment;
+    if (size <= kYmmAlignment) return kYmmAlignment;
+    if (size <= kZmmAlignment) return kZmmAlignment;
+    return kZmmAlignment;
 }
 
 template <Arithmetic T, std::size_t Dims = 0>
