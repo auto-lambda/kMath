@@ -16,7 +16,7 @@
 #endif  // __cpp_constinit
 
 namespace math::legal {
-[[maybe_unused]] KMATH_CXX20_CONSTINIT auto kLicense = R"(The kMath Project
+[[maybe_unused]] KMATH_CXX20_CONSTINIT auto kLicense = R"(The kMath library
 is made available under the BSD 3-Clause License.
 
 Copyright (c) 2021, The Lambda Project <https://github.com/auto-lambda>
@@ -26,7 +26,7 @@ See https://github.com/auto-lambda/kMath/blob/master/LICENSE for full license te
 SPDX-License-Identifier: BSD-3-Clause)";
 #ifndef __cpp_constinit
 [[maybe_unused]] struct Embed {
-    char const *str = ::math::legal::kLicense;
+  char const *str = ::math::legal::kLicense;
 } embed {};
 #endif  // __cpp_constinit
 }  // namespace math::legal
@@ -39,6 +39,7 @@ SPDX-License-Identifier: BSD-3-Clause)";
 #include <functional>
 #include <type_traits>
 #include <utility>
+#include <stdexcept>
 
 #if __has_include(<iostream>) && defined(KMATH_IOSTREAM)
 # include <iostream>
@@ -367,6 +368,16 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 
   [[nodiscard]] constexpr declauto operator[](SizeType const pos)       noexcept { return data_[pos]; }
   [[nodiscard]] constexpr Scalar   operator[](SizeType const pos) const noexcept { return data_[pos]; }
+
+  [[nodiscard]] constexpr declauto at(SizeType const pos) {
+    if (pos >= kDims) throw std::out_of_range("invalid vector subscript");
+    return data_[pos];
+  }
+  
+  [[nodiscard]] constexpr Scalar at(SizeType const pos) const {
+    if (pos >= kDims) throw std::out_of_range("invalid vector subscript");
+    return data_[pos];
+  }
 
   [[nodiscard]] explicit constexpr operator Scalar *()       noexcept { return std::data(data_); }
   [[nodiscard]] explicit constexpr operator Scalar *() const noexcept { return std::data(data_); }
