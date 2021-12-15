@@ -41,7 +41,7 @@ int main(int const argc, char const * const[]) {
   // math::ct_sqrt dynamically dispatches between
   // (a) compile-time implementation of sqrt if constant evaluated
   // (b) std::sqrt otherwise
-  constexpr auto rational = math::ct_sqrt(5.0625); // 5.0625 = 2.25²
+  auto constexpr rational = math::ct_sqrt(5.0625); // 5.0625 = 2.25²
   
   std::printf("%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n",
     scalar_mul_vec[0],  //  1.50
@@ -85,7 +85,7 @@ main:                                              # @main
 .L.str:
   .asciz  "%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n%.2lf\n"
 ```
-***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/fEEoP3Tqv)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
+***[Try it live on the amazing Compiler Explorer by Matt Godbolt](https://godbolt.org/z/PoWYh88r5)*** *[x86-64 <sup>clang, gcc, icx</sup>, ARM64 <sup>gcc</sup>, RISC-V <sup>clang, gcc</sup>]*
 
 ## Progress
 - [x] mathematical constants
