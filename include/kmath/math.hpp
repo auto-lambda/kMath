@@ -68,61 +68,62 @@ concept Arithmetic = std::is_arithmetic_v<T>;
 /*========================*/
 /* Mathematical constants */
 /*========================*/
-// Euler's number constant
+/// @brief Euler's number constant
 template <Arithmetic T>
 inline constexpr T kEulersNumber{2.71828182845904523536L};
-// log2(e) constant
+/// @brief log2(e) constant
 template <Arithmetic T>
 inline constexpr T kLog2e{1.44269504088896340736L};
-// log10(e) constant
+/// @brief log10(e) constant
 template <Arithmetic T>
 inline constexpr T kLog10e{0.434294481903251827651L};
-// ln(2) constant
+/// @brief ln(2) constant
 template <Arithmetic T>
 inline constexpr T kLn2{0.693147180559945309417L};
-// ln(10) constant
+/// @brief ln(10) constant
 template <Arithmetic T>
 inline constexpr T kLn10{2.30258509299404568402L};
-// π constant
+/// @brief π constant
 template <Arithmetic T>
 inline constexpr T kPi{3.14159265358979323846L};
-// π/2 constant
+/// @brief π/2 constant
 template <Arithmetic T>
 inline constexpr T kPiOver2{1.57079632679489661923L};
-// π/4 constant
+/// @brief π/4 constant
 template <Arithmetic T>
 inline constexpr T kPiOver4{0.785398163397448309616L};
-// √2 constant
+/// @brief √2 constant
 template <Arithmetic T>
 inline constexpr T kSqrt2{1.41421356237309504880L};
-// 1/π constant
+/// @brief 1/π constant
 template <Arithmetic T>
 inline constexpr T kOneOverPi{0.318309886183790671538L};
-// 2/π constant
+/// @brief 2/π constant
 template <Arithmetic T>
 inline constexpr T kTwoOverPi{0.636619772367581343076L};
-// 2/√π constant
+/// @brief 2/√π constant
 template <Arithmetic T>
 inline constexpr T kTwoOverSqrtPi{1.12837916709551257390L};
-// 1/√2 constant
+/// @brief 1/√2 constant
 template <Arithmetic T>
 inline constexpr T kTwoOverSqrt2{0.707106781186547524401L};
-// quiet nan constant
+/// @brief quiet nan constant
 template <Arithmetic T>
 inline constexpr T kQuietNan = std::numeric_limits<T>::quiet_NaN();
-// signal nan constant
+/// @brief signal nan constant
 template <Arithmetic T>
 inline constexpr T kSignalingNan = std::numeric_limits<T>::signaling_NaN();
-// nan constant
+/// @brief nan constant
 template <Arithmetic T>
 inline constexpr T kNan = kQuietNan<T>;
-// inf constant
+/// @brief inf constant
 template <Arithmetic T>
 inline constexpr T kInf = std::numeric_limits<T>::infinity();
-// inf constant
+/// @brief epsilon constant
 template <Arithmetic T>
 inline constexpr T kEpsilon = std::numeric_limits<T>::epsilon();
 
+/// @brief Type used to perform pointer arithmetic
 using SizeType = std::array<std::nullptr_t, 1>::size_type;
 
 template <Arithmetic T, SizeType Dims>
@@ -133,48 +134,62 @@ struct Vector;
 
 // clang-format off
 namespace internal {
+/// @brief Utility type to disable copy-assignment
 struct NonCopyAssignable {
   auto &operator=(NonCopyAssignable const &) = delete;
   auto &operator=(NonCopyAssignable) = delete;
 };
 
+/// @brief Utility type to disable move-assignment
 struct NonMoveAssignable {
   auto &operator=(NonMoveAssignable &&) = delete;
 };
 
+/// @brief Utility type to disable copy-construction
 struct NonCopyConstructible {
   NonCopyConstructible(NonCopyConstructible const &) = delete;
 };
 
+/// @brief Utility type to disable move-construction
 struct NonMoveConstructible {
   NonMoveConstructible(NonMoveConstructible &&) = delete;
 };
 
+/// @brief Utility type to disable default-construction
 struct NonDefaultConstructible {
   NonDefaultConstructible() = delete;
 };
 
-struct Tag : NonDefaultConstructible, NonCopyConstructible, NonMoveConstructible // Non-constructible
-                                    , NonCopyAssignable   , NonMoveAssignable    // Non-assignable
+/// @brief Non-constructible and non-assignable Tag type
+struct Tag : NonDefaultConstructible, NonCopyConstructible, NonMoveConstructible
+                                    , NonCopyAssignable   , NonMoveAssignable
 {};
 
 static_assert(!std::is_constructible_v<Tag>      && !std::is_assignable_v<Tag, Tag>
            && !std::is_copy_constructible_v<Tag> && !std::is_copy_assignable_v<Tag>
            && !std::is_move_constructible_v<Tag> && !std::is_move_assignable_v<Tag>);
 
+/// @brief Tag used to identify a Vector
 struct VectorTag     : Tag{};
+/// @brief Tag used to identify a Matrix
 struct MatrixTag     : Tag{};
+/// @brief Tag used to identify a Quaternion
 struct QuaternionTag : Tag{};
 
+/// @brief Alias for std::remove_cvref_t<T>
 template <typename T> using NoCvRef = std::remove_cvref_t<T>;
+/// @brief Alias for std::remove_cv_t<T>
 template <typename T> using NoCv    = std::remove_cv_t<T>;
 
 template <bool ShouldCopy, typename T>
 concept CopyOrNonConstLValue = ShouldCopy || !(std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>);
 }  // namespace internal
 
+/// @brief Determines whether type T is of Vector based on its Tag
 template <typename T> concept AVector     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::VectorTag>;
+/// @brief Determines whether type T is of Matrix based on its Tag
 template <typename T> concept AMatrix     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::MatrixTag>;
+/// @brief Determines whether type T is of Quaternion based on its Tag
 template <typename T> concept AQuaternion = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::QuaternionTag>;
 
 namespace internal {
@@ -345,12 +360,20 @@ KMATH_IMPL_ARITHMETIC(*, Dims, std::multiplies)
 #undef KMATH_IMPL_ARITHMETIC
 #undef KMATH_IMPL_ARITHMETIC_IMPL
 
+/// @class Vector
+/// @brief Provides an abstraction of mathematical vectors around Dims values of type T
+/// 
+/// @tparam T Underlying type of elements stored in the vector
+/// @tparam Dims Number of dimensions (elements)
 template <Arithmetic T, SizeType Dims>
 struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
-  constexpr static auto kDims = Dims;
+  /// @brief Underlying type of elements stored in the vector
   using Scalar = internal::NoCvRef<T>;
-  using Derived  = ::math::Vector<Scalar, Dims>;
+  /// @brief Type used to perform pointer arithmetic
   using SizeType = ::math::SizeType;
+
+  /// @brief Dimensions (elements) in the vector
+  constexpr static auto kDims = Dims;
 
   using internal::VectorStorage<Scalar, Dims>::VectorStorage;
   using Storage = internal::VectorStorage<Scalar, Dims>;
@@ -358,40 +381,74 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
 
   using Tag = internal::VectorTag;
 
+  /// @brief Fill Vector with single scalar
+  /// 
+  /// @param scalar Value to fill Vector with
   constexpr explicit Vector(Scalar const scalar) noexcept { data_.fill(scalar); }
 
   template <typename U>
   [[nodiscard]] constexpr static declauto From(U *data) noexcept { return std::launder(reinterpret_cast<::math::Vector<T, Dims> *>(data)); }
 
+  /// @brief Syntactic sugar dereferencing this pointer to get a reference
   [[nodiscard]] constexpr declauto self()       noexcept { return *this; }
+  /// @brief Syntactic sugar dereferencing this pointer to get a const reference
   [[nodiscard]] constexpr declauto self() const noexcept { return *this; }
 
+  /// @brief Access element of vector
+  /// 
+  /// @param pos Index of element to access
+  /// @return Reference to the element
   [[nodiscard]] constexpr declauto operator[](SizeType const pos)       noexcept { return data_[pos]; }
+  /// @brief Access element of vector
+  /// 
+  /// @param pos Index of element to access
+  /// @return Copy of the element
   [[nodiscard]] constexpr Scalar   operator[](SizeType const pos) const noexcept { return data_[pos]; }
 
+  /// @brief Access element of vector
+  /// @note The at function performs bounds-checking and may throw, use operator[] for unchecked access instead.
+  /// 
+  /// @param pos Index of element to access
+  /// @return Reference to the element
+  /// @throw std::out_of_range if pos is out of bounds
   [[nodiscard]] constexpr declauto at(SizeType const pos) {
     if (pos >= kDims) throw std::out_of_range("invalid vector subscript");
     return data_[pos];
   }
-  
+
+  /// @brief Access element of vector
+  /// @note The at function performs bounds-checking and may throw, use operator[] for unchecked access instead.
+  /// 
+  /// @param pos Index of element to access
+  /// @return Copy of the element
+  /// @throw std::out_of_range if pos is out of bounds
   [[nodiscard]] constexpr Scalar at(SizeType const pos) const {
     if (pos >= kDims) throw std::out_of_range("invalid vector subscript");
     return data_[pos];
   }
 
-  [[nodiscard]] explicit constexpr operator Scalar *()       noexcept { return std::data(data_); }
-  [[nodiscard]] explicit constexpr operator Scalar *() const noexcept { return std::data(data_); }
-
+  /// @brief Negate elements of vector, compue its opposite vector
+  /// 
+  /// @return Negated copy of vector
   [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
+  /// @brief Negate elements of vector, compue its opposite vector
+  /// 
+  /// @return Negated copy of vector
   [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
 
+  /// @brief Pointer to the vector's first element in memory
   [[nodiscard]] constexpr declauto data()       noexcept { return std::data(data_); }
+  /// @brief Const pointer to the vector's first element in memory
   [[nodiscard]] constexpr declauto data() const noexcept { return std::data(data_); }
 
+  /// @brief Access std::array storage for structured-bindings
   [[nodiscard]] constexpr auto       &raw()       noexcept { return data_; }
+  /// @brief Access std::array storage for structured-bindings
   [[nodiscard]] constexpr auto const &raw() const noexcept { return data_; }
 
+  /// @brief Get size of vector
   [[nodiscard]] constexpr auto size() const noexcept { return kDims; }
+  /// @brief Get dimensions of vector
   [[nodiscard]] constexpr auto dims() const noexcept { return kDims; }
 
   [[nodiscard]] constexpr declauto cbegin() const noexcept { return std::cbegin(data_); }
@@ -403,29 +460,41 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr declauto end()       noexcept { return std::end(data_); }
   [[nodiscard]] constexpr declauto end() const noexcept { return cend(); }
 
-  template <Arithmetic U>
-  [[nodiscard]] constexpr auto truncate() const noexcept { return truncate<U>(std::make_index_sequence<Dims>{}); }
-
+  // @brief Compute |v|², synonymous with dot(v,v)
   [[nodiscard]] constexpr Scalar length_squared()    const noexcept { return dot(); }
+  // @brief Compute |v|
   [[nodiscard]] constexpr Scalar length()            const noexcept { return ::math::ct_sqrt(length_squared()); }
+  // @brief Compute 1/|v|
   [[nodiscard]] constexpr Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
+  // @brief Compute distance to other vector
+  [[nodiscard]] constexpr Scalar distance(Vector const &other) const noexcept { return (self() - other).length(); }
 
-  [[nodiscard]] constexpr Scalar distance(Derived const &other) const noexcept { return (self() - other).length(); }
-
+  // @brief Resize vector
                 constexpr void resize (Scalar const scale)       noexcept {        self() *= (reciprocal_length() * scale); }
+  // @brief Resize vector into a copy
   [[nodiscard]] constexpr auto resized(Scalar const scale) const noexcept { return self() *  (reciprocal_length() * scale); }
 
+  // @brief Normalize vector
                 constexpr void normalize ()       noexcept {        resize (1); }
+
+  // @brief Normalize vector into a copy
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
+  /// @brief Computes the dot product of the vector with itself
   [[nodiscard]] constexpr Scalar dot()                    const noexcept { return dot(self()); }
+  /// @brief Computes the dot product of this and another vector
+  /// 
+  /// @param other The other vector
+  /// @return dot product of this and another vector
   [[nodiscard]] constexpr Scalar dot(Vector const &other) const noexcept { return ::math::dot(self(), other); }
 
+  // @brief Checks if all elements of the vector are equal zero
+  // @note For floating point scalars |v|² < epsilon is used to determine zero-equality
   [[nodiscard]] constexpr bool is_zero() const noexcept {
     if constexpr (std::is_floating_point_v<Scalar>) {
       return dot() < ::math::kEpsilon<Scalar>;
     } else /* std::is_integral_v<T> */ {
-      return self() == std::declval<Derived>();
+      return self() == std::declval<Vector>();
     }
   }
 
@@ -441,14 +510,9 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 4>::From(data() + 0); }
 
   [[nodiscard]] constexpr Vector cross(Vector<T, 3> const &other) const noexcept requires(kDims == 3) { return math::cross(self(), other); }
-
-  template <Arithmetic U, std::size_t... Is>
-  [[nodiscard]] constexpr auto truncate(std::index_sequence<Is...>) const noexcept {
-    return U{static_cast<typename U::Scalar>(data_[Is])...};
-  }
 };
 
-// Ensure all types in parameter pack are the same as the first one
+/// @brief Ensures all types in parameter pack are the same as the first one
 template <typename T, typename... Ts>
 struct StrictParameterTypes {
   static_assert(std::conjunction_v<std::is_same<internal::NoCvRef<T>, Ts>...>, "All values are required to be of the same type.");
@@ -456,9 +520,41 @@ struct StrictParameterTypes {
   using U = internal::NoCvRef<T>;
 };
 
-// CTAD deduction guidelines for Vector
+/// @brief CTAD deduction guidelines for Vector
 template <Arithmetic T, Arithmetic... Ts>
 Vector(T, Ts...) -> Vector<typename StrictParameterTypes<T, Ts...>::U, 1 + sizeof...(Ts)>;
+
+namespace internal {
+template <Arithmetic T, SizeType Rows, SizeType Columns>
+struct Matrix {
+  static_assert(Rows && Columns, "Rows and Columns are required to be non-zero.");
+
+  /// @brief Underlying type of elements stored in the matrix
+  using Scalar = internal::NoCvRef<T>;
+  /// @brief Type used to perform pointer arithmetic
+  using SizeType = ::math::SizeType;
+
+  /// @brief Rows in the matrix
+  constexpr static auto kRows = Rows;
+  /// @brief Columns in the matrix
+  constexpr static auto kColumns = Columns;
+  /// @brief Elements in the matrix
+  constexpr static auto kElements = kRows * kColumns;
+
+  /// @brief Construct default initialized matrix
+  constexpr Matrix() noexcept = default;
+
+  /// @brief Fill all values in the matrix with scalar s
+  ///
+  /// @param s scalar to fill matrix with
+  explicit constexpr Matrix(Scalar const s) noexcept {
+    for (auto &&x : data_)
+      x = Vector<T, Rows>{s};
+  }
+
+  std::array<Vector<T, Rows>, Columns> data_{};
+};
+}
 
 namespace aliases {
 using Vec2i = Vector<int, 2>;
@@ -499,11 +595,13 @@ using Vec4 = Vec<T, 4>;
 using namespace aliases;
 #endif  // KMATH_NO_ALIASES
 
+/// @brief Converts radians to degrees
 template <std::floating_point T>
 [[nodiscard]] constexpr inline T const rad_to_deg(T const rad) noexcept {
   return static_cast<T>(rad * 180.0L / kPi<long double>);
 }
 
+/// @brief Converts degrees to radians
 template <std::floating_point T>
 [[nodiscard]] constexpr inline T const deg_to_rad(T const deg) noexcept {
   return static_cast<T>(deg * kPi<long double> / 180.0L);
