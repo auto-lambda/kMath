@@ -390,7 +390,7 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr static declauto From(U *data) noexcept { return std::launder(reinterpret_cast<::math::Vector<T, Dims> *>(data)); }
 
   /// @brief Syntactic sugar dereferencing this pointer to get a reference
-  [[nodiscard]] constexpr declauto self()       noexcept { return *this; }
+  [[nodiscard]] constexpr declauto self() noexcept { return *this; }
   /// @brief Syntactic sugar dereferencing this pointer to get a const reference
   [[nodiscard]] constexpr declauto self() const noexcept { return *this; }
 
@@ -398,12 +398,12 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   /// 
   /// @param pos Index of element to access
   /// @return Reference to the element
-  [[nodiscard]] constexpr declauto operator[](SizeType const pos)       noexcept { return data_[pos]; }
+  [[nodiscard]] constexpr declauto operator[](SizeType const pos) noexcept { return data_[pos]; }
   /// @brief Access element of vector
   /// 
   /// @param pos Index of element to access
   /// @return Copy of the element
-  [[nodiscard]] constexpr Scalar   operator[](SizeType const pos) const noexcept { return data_[pos]; }
+  [[nodiscard]] constexpr Scalar operator[](SizeType const pos) const noexcept { return data_[pos]; }
 
   /// @brief Access element of vector
   /// @note The at function performs bounds-checking and may throw, use operator[] for unchecked access instead.
@@ -430,21 +430,21 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   /// @brief Negate elements of vector, compute its opposite vector
   /// 
   /// @return Negated copy of vector
-  [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
+  [[nodiscard]] constexpr auto operator-() noexcept { return self() * static_cast<Scalar>(-1); }
   /// @brief Negate elements of vector, compute its opposite vector
   /// 
   /// @return Negated copy of vector
   [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
 
   /// @brief Pointer to the vector's first element in memory
-  [[nodiscard]] constexpr declauto data()       noexcept { return std::data(data_); }
+  [[nodiscard]] constexpr declauto data() noexcept { return std::data(data_); }
   /// @brief Const pointer to the vector's first element in memory
   [[nodiscard]] constexpr declauto data() const noexcept { return std::data(data_); }
 
   /// @brief Access std::array storage for structured-bindings
-  [[nodiscard]] constexpr auto       &raw()       noexcept { return data_; }
+  [[nodiscard]] constexpr declauto raw() noexcept { return data_; }
   /// @brief Access std::array storage for structured-bindings
-  [[nodiscard]] constexpr auto const &raw() const noexcept { return data_; }
+  [[nodiscard]] constexpr declauto raw() const noexcept { return data_; }
 
   /// @brief Get size of vector
   [[nodiscard]] constexpr auto size() const noexcept { return kDims; }
@@ -454,40 +454,40 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   // @brief Returns const iterator to beginning of the underlying container
   [[nodiscard]] constexpr declauto cbegin() const noexcept { return std::cbegin(data_); }
   // @brief Returns const iterator to past-the-end element of the underlying container
-  [[nodiscard]] constexpr declauto cend()   const noexcept { return std::cend(data_); }
+  [[nodiscard]] constexpr declauto cend() const noexcept { return std::cend(data_); }
 
   // @brief Returns iterator to beginning of the underlying container
-  [[nodiscard]] constexpr declauto begin()       noexcept { return std::begin(data_); }
+  [[nodiscard]] constexpr declauto begin() noexcept { return std::begin(data_); }
   // @brief Returns const iterator to beginning of the underlying container
   [[nodiscard]] constexpr declauto begin() const noexcept { return cbegin(); }
 
   // @brief Returns iterator to past-the-end element of the underlying container
-  [[nodiscard]] constexpr declauto end()       noexcept { return std::end(data_); }
+  [[nodiscard]] constexpr declauto end() noexcept { return std::end(data_); }
   // @brief Returns const iterator to past-the-end element of the underlying container
   [[nodiscard]] constexpr declauto end() const noexcept { return cend(); }
 
   // @brief Compute |v|², synonymous with dot(v,v)
-  [[nodiscard]] constexpr Scalar length_squared()    const noexcept { return dot(); }
+  [[nodiscard]] constexpr Scalar length_squared() const noexcept { return dot(); }
   // @brief Compute |v|
-  [[nodiscard]] constexpr Scalar length()            const noexcept { return ::math::ct_sqrt(length_squared()); }
+  [[nodiscard]] constexpr Scalar length() const noexcept { return ::math::ct_sqrt(length_squared()); }
   // @brief Compute 1/|v|
   [[nodiscard]] constexpr Scalar reciprocal_length() const noexcept { return static_cast<Scalar>(1) / length(); }
   // @brief Compute distance to other vector
   [[nodiscard]] constexpr Scalar distance(Vector const &other) const noexcept { return (self() - other).length(); }
 
   // @brief Resize vector
-                constexpr void resize (Scalar const scale)       noexcept {        self() *= (reciprocal_length() * scale); }
+  constexpr void resize (Scalar const scale) noexcept { self() *= (reciprocal_length() * scale); }
   // @brief Resize vector into a copy
   [[nodiscard]] constexpr auto resized(Scalar const scale) const noexcept { return self() *  (reciprocal_length() * scale); }
 
   // @brief Normalize vector
-                constexpr void normalize ()       noexcept {        resize (1); }
+  constexpr void normalize () noexcept { resize (1); }
 
   // @brief Normalize vector into a copy
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
   
   /// @brief Computes the dot product of the vector with itself
-  [[nodiscard]] constexpr Scalar dot()                    const noexcept { return dot(self()); }
+  [[nodiscard]] constexpr Scalar dot() const noexcept { return dot(self()); }
   /// @brief Computes the dot product of this and another vector
   /// 
   /// @param other The other vector
