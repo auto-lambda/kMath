@@ -427,11 +427,11 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
     return data_[pos];
   }
 
-  /// @brief Negate elements of vector, compue its opposite vector
+  /// @brief Negate elements of vector, compute its opposite vector
   /// 
   /// @return Negated copy of vector
   [[nodiscard]] constexpr auto operator-()       noexcept { return self() * static_cast<Scalar>(-1); }
-  /// @brief Negate elements of vector, compue its opposite vector
+  /// @brief Negate elements of vector, compute its opposite vector
   /// 
   /// @return Negated copy of vector
   [[nodiscard]] constexpr auto operator-() const noexcept { return self() * static_cast<Scalar>(-1); }
@@ -451,13 +451,19 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   /// @brief Get dimensions of vector
   [[nodiscard]] constexpr auto dims() const noexcept { return kDims; }
 
+  // @brief Returns const iterator to beginning of the underlying container
   [[nodiscard]] constexpr declauto cbegin() const noexcept { return std::cbegin(data_); }
+  // @brief Returns const iterator to past-the-end element of the underlying container
   [[nodiscard]] constexpr declauto cend()   const noexcept { return std::cend(data_); }
 
+  // @brief Returns iterator to beginning of the underlying container
   [[nodiscard]] constexpr declauto begin()       noexcept { return std::begin(data_); }
+  // @brief Returns const iterator to beginning of the underlying container
   [[nodiscard]] constexpr declauto begin() const noexcept { return cbegin(); }
 
+  // @brief Returns iterator to past-the-end element of the underlying container
   [[nodiscard]] constexpr declauto end()       noexcept { return std::end(data_); }
+  // @brief Returns const iterator to past-the-end element of the underlying container
   [[nodiscard]] constexpr declauto end() const noexcept { return cend(); }
 
   // @brief Compute |v|², synonymous with dot(v,v)
