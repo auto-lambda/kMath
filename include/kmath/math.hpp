@@ -348,26 +348,26 @@ struct Vector {
   alignas(internal::align(sizeof(StorageType))) StorageType data_ {};
 
   /// @brief 
-  explicit constexpr Vector(StorageType const& data) noexcept
-    : data_{ data } {
+  explicit constexpr Vector(StorageType const &data) noexcept
+    : data_{data} {
   }
 
   constexpr Vector(Arithmetic auto&&...args) noexcept
-    : data_{ std::forward<decltype(args)>(args)... } {}
+    : data_{std::forward<decltype(args)>(args)...} {}
 
-  explicit constexpr Vector(T const* raw) noexcept
-    : data_{ []<std::size_t...Is>(T const* ptr, std::index_sequence<Is...>) constexpr {
+  explicit constexpr Vector(T const *raw) noexcept
+    : data_{[]<std::size_t...Is>(T const *ptr, std::index_sequence<Is...>) constexpr {
         return std::array<T, sizeof...(Is)>{ptr[Is]...};
-      }(raw, std::make_index_sequence<Dims>{}) }
+      }(raw, std::make_index_sequence<Dims>{})}
   {}
 
   [[nodiscard]] friend constexpr auto operator<=>(
-    Vector const& left, Vector const& right) noexcept {
+    Vector const &left, Vector const &right) noexcept {
     return left.data_ <=> right.data_;
   }
 
   [[nodiscard]] friend constexpr auto operator==(
-    Vector const& left, Vector const& right) noexcept {
+    Vector const &left, Vector const &right) noexcept {
     return left.data_ == right.data_;
   }
 
@@ -546,11 +546,13 @@ struct Matrix {
       v = Vector<T, Rows>{s};
   }
 
-  constexpr Matrix(AVector auto&&... columns) : data_{columns...} {
+  /// @brief Construct matrix from row vectors
+  constexpr Matrix(AVector auto&&... columns)
+    : data_{columns...} {
   }
 
   std::array<Vector<T, Rows>, Columns> data_{};
-};
+}
 
 /// @brief CTAD deduction guidelines for Matrix
 template <AVector T, AVector... Ts>
