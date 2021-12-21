@@ -127,9 +127,6 @@ inline constexpr T kEpsilon = std::numeric_limits<T>::epsilon();
 using SizeType = std::array<std::nullptr_t, 1>::size_type;
 
 template <Arithmetic T, SizeType Dims>
-struct VectorStorage;
-
-template <Arithmetic T, SizeType Dims>
 struct Vector;
 
 // clang-format off
@@ -183,6 +180,14 @@ template <typename T> using NoCv    = std::remove_cv_t<T>;
 
 template <bool ShouldCopy, typename T>
 concept CopyOrNonConstLValue = ShouldCopy || !(std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>);
+
+/// @brief Ensures all types in parameter pack are the same as the first one
+template <typename T, typename... Ts>
+struct StrictParameterTypes {
+  static_assert(std::conjunction_v<std::is_same<internal::NoCvRef<T>, Ts>...>, "All values are required to be of the same type.");
+
+  using U = internal::NoCvRef<T>;
+};
 }  // namespace internal
 
 /// @brief Determines whether type T is of Vector based on its Tag
@@ -206,42 +211,6 @@ namespace internal {
     if (size <= kZmmAlignment) return kZmmAlignment;
     return kZmmAlignment;
 }
-
-template <Arithmetic T, std::size_t Dims = 0>
-struct VectorStorage {
-  constexpr VectorStorage() noexcept = default;
-  explicit constexpr VectorStorage(std::array<T, Dims> const &data) noexcept
-      : data_{data} {}
-
-  template <Arithmetic... Args>
-  constexpr VectorStorage(Args &&...args) noexcept
-      : data_{std::forward<Args>(args)...} {}
-
-  explicit constexpr VectorStorage(T const *raw) noexcept
-      : data_{[]<std::size_t...Is>(T const *ptr,
-                                   std::index_sequence<Is...>) constexpr {
-            return std::array<T, sizeof...(Is)>{ptr[Is]...};
-        }(raw, std::make_index_sequence<Dims>{})}
-  {}
-  
-  [[nodiscard]] friend constexpr auto operator<=>(
-      VectorStorage const &left, VectorStorage const &right) noexcept {
-    return left.data_ <=> right.data_;
-  }
-
-  [[nodiscard]] friend constexpr auto operator==(
-      VectorStorage const &left, VectorStorage const &right) noexcept {
-    return left.data_ == right.data_;
-  }
-
-  using StorageType = typename std::array<T, Dims>;
-  alignas(internal::align(sizeof(StorageType))) StorageType data_{};
-};
-
-template <Arithmetic T>
-struct VectorStorage<T, 0> {
-  KMATH_CXX20_NO_UNIQUE_ADDR struct Empty {} data_{};
-};
 
 [[nodiscard]] constexpr auto newton_raphson(long double scalar, long double cur, long double prev) noexcept {
   if (cur == prev)
@@ -366,18 +335,41 @@ KMATH_IMPL_ARITHMETIC(*, Dims, std::multiplies)
 /// @tparam T Underlying type of elements stored in the vector
 /// @tparam Dims Number of dimensions (elements)
 template <Arithmetic T, SizeType Dims>
-struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
+struct Vector {
   /// @brief Underlying type of elements stored in the vector
   using Scalar = internal::NoCvRef<T>;
   /// @brief Type used to perform pointer arithmetic
   using SizeType = ::math::SizeType;
-
+  /// @brief Type used to actually store the elements
+  using StorageType = typename std::array<Scalar, Dims>;
   /// @brief Dimensions (elements) in the vector
   constexpr static auto kDims = Dims;
 
-  using internal::VectorStorage<Scalar, Dims>::VectorStorage;
-  using Storage = internal::VectorStorage<Scalar, Dims>;
-  using Storage::data_;
+  alignas(internal::align(sizeof(StorageType))) StorageType data_ {};
+
+  /// @brief 
+  explicit constexpr Vector(StorageType const& data) noexcept
+    : data_{ data } {
+  }
+
+  constexpr Vector(Arithmetic auto&&...args) noexcept
+    : data_{ std::forward<decltype(args)>(args)... } {}
+
+  explicit constexpr Vector(T const* raw) noexcept
+    : data_{ []<std::size_t...Is>(T const* ptr, std::index_sequence<Is...>) constexpr {
+        return std::array<T, sizeof...(Is)>{ptr[Is]...};
+      }(raw, std::make_index_sequence<Dims>{}) }
+  {}
+
+  [[nodiscard]] friend constexpr auto operator<=>(
+    Vector const& left, Vector const& right) noexcept {
+    return left.data_ <=> right.data_;
+  }
+
+  [[nodiscard]] friend constexpr auto operator==(
+    Vector const& left, Vector const& right) noexcept {
+    return left.data_ == right.data_;
+  }
 
   using Tag = internal::VectorTag;
 
@@ -442,9 +434,9 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr declauto data() const noexcept { return std::data(data_); }
 
   /// @brief Access std::array storage for structured-bindings
-  [[nodiscard]] constexpr declauto raw() noexcept { return data_; }
+  [[nodiscard]] constexpr auto &raw() noexcept { return data_; }
   /// @brief Access std::array storage for structured-bindings
-  [[nodiscard]] constexpr declauto raw() const noexcept { return data_; }
+  [[nodiscard]] constexpr auto const &raw() const noexcept { return data_; }
 
   /// @brief Get size of vector
   [[nodiscard]] constexpr auto size() const noexcept { return kDims; }
@@ -481,7 +473,7 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr auto resized(Scalar const scale) const noexcept { return self() *  (reciprocal_length() * scale); }
 
   // @brief Normalize vector
-  constexpr void normalize () noexcept { resize (1); }
+  constexpr void normalize() noexcept { resize (1); }
 
   // @brief Normalize vector into a copy
   [[nodiscard]] constexpr auto normalized() const noexcept { return resized(1); }
@@ -518,19 +510,15 @@ struct Vector : internal::VectorStorage<internal::NoCv<T>, Dims> {
   [[nodiscard]] constexpr Vector cross(Vector<T, 3> const &other) const noexcept requires(kDims == 3) { return math::cross(self(), other); }
 };
 
-/// @brief Ensures all types in parameter pack are the same as the first one
-template <typename T, typename... Ts>
-struct StrictParameterTypes {
-  static_assert(std::conjunction_v<std::is_same<internal::NoCvRef<T>, Ts>...>, "All values are required to be of the same type.");
-
-  using U = internal::NoCvRef<T>;
+template <Arithmetic T>
+struct Vector<T, 0> {
 };
+
 
 /// @brief CTAD deduction guidelines for Vector
 template <Arithmetic T, Arithmetic... Ts>
-Vector(T, Ts...) -> Vector<typename StrictParameterTypes<T, Ts...>::U, 1 + sizeof...(Ts)>;
+Vector(T, Ts...) -> Vector<typename internal::StrictParameterTypes<T, Ts...>::U, 1 + sizeof...(Ts)>;
 
-namespace internal {
 template <Arithmetic T, SizeType Rows, SizeType Columns>
 struct Matrix {
   static_assert(Rows && Columns, "Rows and Columns are required to be non-zero.");
@@ -554,13 +542,19 @@ struct Matrix {
   ///
   /// @param s scalar to fill matrix with
   explicit constexpr Matrix(Scalar const s) noexcept {
-    for (auto &&x : data_)
-      x = Vector<T, Rows>{s};
+    for (auto &&v : data_)
+      v = Vector<T, Rows>{s};
+  }
+
+  constexpr Matrix(AVector auto&&... columns) : data_{columns...} {
   }
 
   std::array<Vector<T, Rows>, Columns> data_{};
 };
-}
+
+/// @brief CTAD deduction guidelines for Matrix
+template <AVector T, AVector... Ts>
+Matrix(T, Ts...) -> Matrix<typename NoCvRef<T>::Scalar, NoCvRef<T>::kDims, 1 + sizeof...(Ts)>;
 
 namespace aliases {
 using Vec2i = Vector<int, 2>;
