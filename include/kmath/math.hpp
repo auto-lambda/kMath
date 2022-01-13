@@ -173,29 +173,24 @@ struct MatrixTag     : Tag{};
 /// @brief Tag used to identify a Quaternion
 struct QuaternionTag : Tag{};
 
-/// @brief Alias for std::remove_cvref_t<T>
-template <typename T> using NoCvRef = std::remove_cvref_t<T>;
-/// @brief Alias for std::remove_cv_t<T>
-template <typename T> using NoCv    = std::remove_cv_t<T>;
-
 template <bool ShouldCopy, typename T>
 concept CopyOrNonConstLValue = ShouldCopy || !(std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>);
 
 /// @brief Ensures all types in parameter pack are the same as the first one
 template <typename T, typename... Ts>
 struct StrictParameterTypes {
-  static_assert(std::conjunction_v<std::is_same<internal::NoCvRef<T>, Ts>...>, "All values are required to be of the same type.");
+  static_assert(std::conjunction_v<std::is_same<std::decay_t<T>, Ts>...>, "All values are required to be of the same type.");
 
-  using U = internal::NoCvRef<T>;
+  using U = std::decay_t<T>;
 };
 }  // namespace internal
 
 /// @brief Determines whether type T is of Vector based on its Tag
-template <typename T> concept AVector     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::VectorTag>;
+template <typename T> concept AVector     = std::is_same_v<typename std::decay_t<T>::Tag, internal::VectorTag>;
 /// @brief Determines whether type T is of Matrix based on its Tag
-template <typename T> concept AMatrix     = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::MatrixTag>;
+template <typename T> concept AMatrix     = std::is_same_v<typename std::decay_t<T>::Tag, internal::MatrixTag>;
 /// @brief Determines whether type T is of Quaternion based on its Tag
-template <typename T> concept AQuaternion = std::is_same_v<typename internal::NoCvRef<T>::Tag, internal::QuaternionTag>;
+template <typename T> concept AQuaternion = std::is_same_v<typename std::decay_t<T>::Tag, internal::QuaternionTag>;
 
 namespace internal {
 [[nodiscard]] consteval std::size_t align(std::size_t const size) noexcept {
@@ -220,7 +215,7 @@ namespace internal {
 }
 
 [[nodiscard]] constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
-  using Scalar = internal::NoCvRef<decltype(scalar)>;
+  using Scalar = std::decay_t<decltype(scalar)>;
   return scalar >= kEpsilon<Scalar> && scalar < kInf<Scalar>
     ? static_cast<Scalar>(newton_raphson(scalar, scalar, Scalar{}))
     : kQuietNan<Scalar>;
@@ -231,7 +226,7 @@ namespace internal {
 [[nodiscard]] constexpr auto ct_sqrt(Arithmetic auto scalar) noexcept {
   return std::is_constant_evaluated()
     ? ::math::internal::ct_sqrt(scalar)
-    : static_cast<internal::NoCvRef<decltype(scalar)>>(std::sqrt(scalar));
+    : static_cast<std::decay_t<decltype(scalar)>>(std::sqrt(scalar));
 }
 
 [[nodiscard]] constexpr auto dot(AVector auto &&lhs,
@@ -239,7 +234,7 @@ namespace internal {
   static_assert(std::is_same_v<decltype(lhs.data_), decltype(rhs.data_)>,
                 "Cannot perform dot() on vector types of different dimensions "
                 "or scalar type.");
-  using VectorType = typename internal::NoCvRef<decltype(lhs)>;
+  using VectorType = typename std::decay_t<decltype(lhs)>;
   typename VectorType::Scalar sum{};
   for (SizeType i{}; i < VectorType::kDims; ++i) sum += lhs[i] * rhs[i];
   return sum;
@@ -248,8 +243,8 @@ namespace internal {
 [[nodiscard]] constexpr auto cross(AVector auto &&lhs,
                                    AVector auto &&rhs) noexcept {
   // TODO: Implement multi-dimensional cross()
-  using VectorType = typename internal::NoCvRef<decltype(lhs)>;
-  static_assert(VectorType::kDims == internal::NoCvRef<decltype(rhs)>::kDims,
+  using VectorType = typename std::decay_t<decltype(lhs)>;
+  static_assert(VectorType::kDims == std::decay_t<decltype(rhs)>::kDims,
                 "Cannot perform cross() on non 3-dimensional vectors.");
   return Vector<typename VectorType::Scalar, 3>{
       lhs[1] * rhs[2] - lhs[2] * rhs[1], lhs[2] * rhs[0] - lhs[0] * rhs[2],
@@ -260,8 +255,8 @@ namespace internal {
 // clang-format off
 template <bool ShouldCopy>
 constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs, auto &&op) noexcept {
-  using Lhs = NoCvRef<decltype(lhs)>;
-  using Rhs = NoCvRef<decltype(rhs)>;
+  using Lhs = std::decay_t<decltype(lhs)>;
+  using Rhs = std::decay_t<decltype(rhs)>;
 
   constexpr auto cannot_throw = !ShouldCopy || (std::is_nothrow_copy_constructible_v<Lhs>
                                              && std::is_nothrow_copy_constructible_v<Rhs>);
@@ -292,7 +287,7 @@ constexpr declauto implement_arithmetic(auto &&lhs, auto &&rhs, auto &&op) noexc
     return Wrapper{arg};
   }](auto &&arg) constexpr noexcept -> declauto {
     if constexpr (AVector<decltype(arg)>)
-      return arg;
+      return std::forward<decltype(arg)>(arg);
     else
       return wrapper(arg);
   };
@@ -337,7 +332,7 @@ KMATH_IMPL_ARITHMETIC(*, Dims, std::multiplies)
 template <Arithmetic T, SizeType Dims>
 struct Vector {
   /// @brief Underlying type of elements stored in the vector
-  using Scalar = internal::NoCvRef<T>;
+  using Scalar = std::decay_t<T>;
   /// @brief Type used to perform pointer arithmetic
   using SizeType = ::math::SizeType;
   /// @brief Type used to actually store the elements
@@ -524,7 +519,7 @@ struct Matrix {
   static_assert(Rows && Columns, "Rows and Columns are required to be non-zero.");
 
   /// @brief Underlying type of elements stored in the matrix
-  using Scalar = internal::NoCvRef<T>;
+  using Scalar = std::decay_t<T>;
   /// @brief Type used to perform pointer arithmetic
   using SizeType = ::math::SizeType;
 
@@ -552,11 +547,11 @@ struct Matrix {
   }
 
   std::array<Vector<T, Rows>, Columns> data_{};
-}
+};
 
 /// @brief CTAD deduction guidelines for Matrix
 template <AVector T, AVector... Ts>
-Matrix(T, Ts...) -> Matrix<typename NoCvRef<T>::Scalar, NoCvRef<T>::kDims, 1 + sizeof...(Ts)>;
+Matrix(T, Ts...) -> Matrix<typename std::decay_t<T>::Scalar, std::decay_t<T>::kDims, 1 + sizeof...(Ts)>;
 
 namespace aliases {
 using Vec2i = Vector<int, 2>;
