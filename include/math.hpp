@@ -175,14 +175,6 @@ struct QuaternionTag : Tag{};
 
 template <bool ShouldCopy, typename T>
 concept CopyOrNonConstLValue = ShouldCopy || !(std::is_lvalue_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>);
-
-/// @brief Ensures all types in parameter pack are the same as the first one
-template <typename T, typename... Ts>
-struct StrictParameterTypes {
-  static_assert(std::conjunction_v<std::is_same<std::decay_t<T>, Ts>...>, "All values are required to be of the same type.");
-
-  using U = std::decay_t<T>;
-};
 }  // namespace internal
 
 /// @brief Determines whether type T is of Vector based on its Tag
@@ -347,8 +339,8 @@ struct Vector {
     : data_{data} {
   }
 
-  constexpr Vector(Arithmetic auto&&...args) noexcept
-    : data_{std::forward<decltype(args)>(args)...} {}
+  constexpr Vector(std::convertible_to<Scalar> auto&&...args) noexcept
+    : data_{static_cast<Scalar>(args)...} {}
 
   explicit constexpr Vector(T const *raw) noexcept
     : data_{[]<std::size_t...Is>(T const *ptr, std::index_sequence<Is...>) constexpr {
@@ -372,9 +364,6 @@ struct Vector {
   /// 
   /// @param scalar Value to fill Vector with
   constexpr explicit Vector(Scalar const scalar) noexcept { data_.fill(scalar); }
-
-  template <typename U>
-  [[nodiscard]] constexpr static declauto From(U *data) noexcept { return std::launder(reinterpret_cast<::math::Vector<T, Dims> *>(data)); }
 
   /// @brief Syntactic sugar dereferencing this pointer to get a reference
   [[nodiscard]] constexpr declauto self() noexcept { return *this; }
@@ -491,17 +480,6 @@ struct Vector {
     }
   }
 
-  [[nodiscard]] constexpr declauto    x() noexcept requires(kDims >= 1) { return self()[0]; }
-  [[nodiscard]] constexpr declauto    y() noexcept requires(kDims >= 2) { return self()[1]; }
-  [[nodiscard]] constexpr declauto    z() noexcept requires(kDims >= 3) { return self()[2]; }
-  [[nodiscard]] constexpr declauto    w() noexcept requires(kDims >= 4) { return self()[3]; }
-  [[nodiscard]] constexpr declauto   xy() noexcept requires(kDims >= 2) { return *Vector<Scalar, 2>::From(data() + 0); }
-  [[nodiscard]] constexpr declauto   yz() noexcept requires(kDims >= 3) { return *Vector<Scalar, 2>::From(data() + 1); }
-  [[nodiscard]] constexpr declauto   zw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 2>::From(data() + 2); }
-  [[nodiscard]] constexpr declauto  xyz() noexcept requires(kDims >= 3) { return *Vector<Scalar, 3>::From(data() + 0); }
-  [[nodiscard]] constexpr declauto  yzw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 3>::From(data() + 1); }
-  [[nodiscard]] constexpr declauto xyzw() noexcept requires(kDims >= 4) { return *Vector<Scalar, 4>::From(data() + 0); }
-
   [[nodiscard]] constexpr Vector cross(Vector<T, 3> const &other) const noexcept requires(kDims == 3) { return math::cross(self(), other); }
 };
 
@@ -511,8 +489,8 @@ struct Vector<T, 0> {
 
 
 /// @brief CTAD deduction guidelines for Vector
-template <Arithmetic T, Arithmetic... Ts>
-Vector(T, Ts...) -> Vector<typename internal::StrictParameterTypes<T, Ts...>::U, 1 + sizeof...(Ts)>;
+template <Arithmetic... Ts>
+Vector(Ts...) -> Vector<std::common_type_t<Ts...>, sizeof...(Ts)>;
 
 template <Arithmetic T, SizeType Rows, SizeType Columns>
 struct Matrix {
